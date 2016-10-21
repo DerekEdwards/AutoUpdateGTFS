@@ -1,0 +1,83 @@
+#!/bin/bash
+
+#This script assumes that:
+# java has already been added to the path and that it is accessible and has sufficient permissions to run OpenTripPlanner.
+# the GTFS file put into newGtfsDataDir will always have the same name.
+# otp has been started and is watching a specific directory for new graphs to be put in
+
+#This should be set to the the local directory where new GTFS data is stored
+newGtfsDataDir=/var/otp/data/new/
+#This should be set to the local directory where OpenTripPlanner expects the GTFS data to be.
+currentGraphGtfsDataDir=/var/otp/data/
+#This should be a CSV with the following format: NAME of Service, URL of GTFS
+gtfsExcelFile=gtfs_locations.csv
+#This should be set to the directory where OTP is expecting graphs to be placed
+otpGraphDirectory=/var/otp/graphs/ma/
+#This should be the filename of the graph object. This is always Graph.obj when OTP builds it.
+graphFileName=Graph.obj
+#This should be the directory of the OpenTripPlanner jar that is serving the instance of OTP on this server
+otpJarDirectory=/var/otp/bin/
+#This should be the directory of the OpenTripPlanner jar
+otpJar=otp-1.0.0-shaded.jar
+#This should be the parameters used when invoking the OpenTripPlanner test new GTFS data
+invokeJavaCommand="java -Xmx4G -jar"
+
+emailDistributionList=dedwards8@gmail.com
+
+clear
+echo "Starting at";  date
+
+#Delete all GTFS files in newGtfsDataDir
+rm -rf $newGtfsDataDir*.zip
+
+#Get rid of the old temp file if it exists
+tempFile=$otpJarDirectory"temp.csv"
+if [ -f $tempFile ] ; then
+    rm $tempFile
+fi
+
+#Go through the gtfsExcelFile and remove the names column.
+while IFS="," read Name URL
+do
+  echo $URL >> $tempFile
+done < $otpJarDirectory$gtfsExcelFile
+
+wget -i $tempFile -P $newGtfsDataDir
+
+#Start Comparing
+#diffResult=$(diff $currentGraphGtfsDataDir$gtfsDataFileName $newGtfsDataDir$gtfsDataFileName)
+
+#If the last modified of the current GTFS data and the new GTFS data are the seam then exit
+#if [ $? -eq 0  ]; then #this is the mac stat. Redhat might want a different format
+#	echo "The files are the same."; 
+#	exit 1
+#fi
+
+#copy the files from the new data directory to the one we will build from 
+echo "cp $newGtfsDataDir$gtfsDataFileName $currentGraphGtfsDataDir$gtfsDataFileName"
+cp $newGtfsDataDir* $currentGraphGtfsDataDir
+
+
+#Now that we know the data file(s) have been updated it is time to test and see if the graph can build properly
+#echo "$invokeJavaCommand $otpJarDirectory$otpJar "--build" $newGtfsDataDir"
+graphBuildResult= $invokeJavaCommand $otpJarDirectory$otpJar "--build" $newGtfsDataDir
+
+#If the last modified of the current GTFS data and the new GTFS data are the same then exit
+if [ $? -gt 0  ]; then #this is the mac stat. Redhat might want a different format
+	echo "Building the graph failed"; 
+	#Should this email a distribution list to let people know now new GTFS data was found?
+	#mail -s "OTP auto updated failed: The Graph.obj could not build" @$emailDistributionList
+	exit 1
+fi
+
+#copy the file from new to expected
+cp $newGtfsDataDir$graphFileName $otpGraphDirectory$graphFileName
+if [ $? -gt 0  ]; then #this is the mac stat. Redhat might want a different format
+	echo "Copying the graph failed"; 
+	#Should this email a distribution list to let people know now new GTFS data was found?
+	mail -s "OTP auto updated failed: The Graph.obj could not be copied" @$emailDistributionList
+	exit 1
+fi
+#if the copy fails we should send some kind of alert
+
+exit 0
