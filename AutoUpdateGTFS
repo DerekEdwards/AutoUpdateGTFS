@@ -5,79 +5,171 @@
 # the GTFS file put into newGtfsDataDir will always have the same name.
 # otp has been started and is watching a specific directory for new graphs to be put in
 
-#This should be set to the the local directory where new GTFS data is stored
-newGtfsDataDir=/var/otp/data/new/
-#This should be set to the local directory where OpenTripPlanner expects the GTFS data to be.
-currentGraphGtfsDataDir=/var/otp/data/
+############################################################
+## Default Setup Instructions
+############################################################
+
+# 1 - Create the following directories and make sure that permissions allow for writing
+# /var/otp/bin
+# /var/otp/data
+# /var/otp/graphs/<your graph folder name>
+# /var/otp/gtfs_current
+# /var/otp/gtfs_new
+# /var/otp/osm_current
+# /var/otp/osm_new
+
+# 2 - Put your Jar File in /var/otp/bin
+
+# 3 - Put your gtfs excel file in /var/otp/bin
+# There should be two columns (Name,URL) Note: only URL is used, the name simply for reference
+
+# 4 - Put your OSM excel file in /var/otp/bin
+# There should be two columns (Name,URL) Note: only URL is used, the name simply for reference
+
+# 5 - Update the directories in the Customizable stuff you probably want to change below
+
+############################################################
+## The Customizable Section
+############################################################
+
+######## Stuff you probably want to change
 #This should be a CSV with the following format: NAME of Service, URL of GTFS
-gtfsExcelFile=gtfs_locations.csv
+gtfsExcelFile=/var/otp/bin/gtfs_locations.csv
+#This should be a CSV with the followig format: NAME of the OSM, URL of OSM
+osmExcelFile=/var/otp/bin/osm_locations.csv
 #This should be set to the directory where OTP is expecting graphs to be placed
-otpGraphDirectory=/var/otp/graphs/ma/
+otpGraphDir=/var/otp/graphs/ma/
+#Specific OTP version
+otpJar=otp-1.0.0-shaded.jar
+#Email Distribution List (comma separated)
+emailDistributionList=dedwards8@gmail.com
+
+######## Stuff you probably DON'T want to change
+#This should be set to the the local directory where new GTFS data is stored
+newGtfsDataDir=/var/otp/gtfs_new/
+#This should be set to the local directory where the Currently used GTFS data is stored
+currentGtfsDataDir=/var/otp/gtfs_current/
+#New Osm Directory
+newOsmDataDir=/var/otp/osm_new/
+#Current Osm Directory
+currentOsmDataDir=/var/otp/osm_current/
+#This is the folder that combines the GTFS and OSM.  The graph is built from this folder
+buildDataDir=/var/otp/data/
 #This should be the filename of the graph object. This is always Graph.obj when OTP builds it.
 graphFileName=Graph.obj
 #This should be the directory of the OpenTripPlanner jar that is serving the instance of OTP on this server
 otpJarDirectory=/var/otp/bin/
-#This should be the directory of the OpenTripPlanner jar
-otpJar=otp-1.0.0-shaded.jar
 #This should be the parameters used when invoking the OpenTripPlanner test new GTFS data
 invokeJavaCommand="java -Xmx4G -jar"
 
-emailDistributionList=dedwards8@gmail.com
-
+############################################################
+## Pre Clean-Up
+############################################################
 clear
 echo "Starting at";  date
+echo "Cleaning Up"
 
-#Delete all GTFS files in newGtfsDataDir
-rm -rf $newGtfsDataDir*.zip
+#Delete everything in the New GTFS Folder
+rm -rf $newGtfsDataDir*
 
-#Get rid of the old temp file if it exists
+#Delete everything in the new OSM Folder
+rm -rf $newOsmDataDir*
+
+#Get rid of the old gtfs temp file if it exists
 tempFile=$otpJarDirectory"temp.csv"
 if [ -f $tempFile ] ; then
     rm $tempFile
 fi
 
-#Go through the gtfsExcelFile and remove the names column.
+#Get rid of the old OSM temp file if it exists
+osmTempFile=$otpJarDirectory"osm_temp.csv"
+if [ -f $osmTempFile ] ; then
+    rm $osmTempFile
+fi
+
+############################################################
+## Download GTFS
+############################################################
+echo "Reading CSV of GTFS locations"
 while IFS="," read Name URL
 do
   echo $URL >> $tempFile
-done < $otpJarDirectory$gtfsExcelFile
-
+done < $gtfsExcelFile
 wget -i $tempFile -P $newGtfsDataDir
 
-#Start Comparing
-#diffResult=$(diff $currentGraphGtfsDataDir$gtfsDataFileName $newGtfsDataDir$gtfsDataFileName)
+#TODO: Check to see any of the GTFS files failed to download
 
-#If the last modified of the current GTFS data and the new GTFS data are the seam then exit
-#if [ $? -eq 0  ]; then #this is the mac stat. Redhat might want a different format
-#	echo "The files are the same."; 
-#	exit 1
-#fi
-
-#copy the files from the new data directory to the one we will build from 
-echo "cp $newGtfsDataDir$gtfsDataFileName $currentGraphGtfsDataDir$gtfsDataFileName"
-cp $newGtfsDataDir* $currentGraphGtfsDataDir
-
-
-#Now that we know the data file(s) have been updated it is time to test and see if the graph can build properly
-#echo "$invokeJavaCommand $otpJarDirectory$otpJar "--build" $newGtfsDataDir"
-graphBuildResult= $invokeJavaCommand $otpJarDirectory$otpJar "--build" $newGtfsDataDir
-
-#If the last modified of the current GTFS data and the new GTFS data are the same then exit
-if [ $? -gt 0  ]; then #this is the mac stat. Redhat might want a different format
-	echo "Building the graph failed"; 
-	#Should this email a distribution list to let people know now new GTFS data was found?
-	#mail -s "OTP auto updated failed: The Graph.obj could not build" @$emailDistributionList
-	exit 1
+#Check to see  if the new GTFS is different than the current GTFS
+diffResult=$(diff $newGtfsDataDir $currentGtfsDataDir)
+if [ ! "$diffResult" ]; then #this is the mac stat. Redhat might want a different format
+        echo "The GTFS has not been updated."
+        exit 0
 fi
 
-#copy the file from new to expected
-cp $newGtfsDataDir$graphFileName $otpGraphDirectory$graphFileName
-if [ $? -gt 0  ]; then #this is the mac stat. Redhat might want a different format
-	echo "Copying the graph failed"; 
-	#Should this email a distribution list to let people know now new GTFS data was found?
-	mail -s "OTP auto updated failed: The Graph.obj could not be copied" @$emailDistributionList
-	exit 1
-fi
-#if the copy fails we should send some kind of alert
+#Delete everything in the build folder
+rm -rf $buildDataDir*
 
-exit 0
+echo "Copying new gtfs to current GTFS folder"
+cp $newGtfsDataDir* $buildDataDir
+
+############################################################
+## Download OSM Map (only run if we have new GTFS)
+############################################################
+echo "Reading CSV of OSM locations"
+##Go through the osmExcelFile and remove the names column.
+while IFS="," read Name URL
+do
+    echo $URL >> $osmTempFile
+done < $osmExcelFile
+wget -i $osmTempFile -P $newOsmDataDir
+
+#TODO: Check to see if the OSM was actually downloaded
+#TODO EMAIL on Failure
+
+############################################################
+## Build the Graph
+############################################################
+$invokeJavaCommand $otpJarDirectory$otpJar "--build" $buildDataDir
+
+############################################################
+## Test the Graph
+############################################################
+# Get the graph size
+graphSize=$(ls -l $buildDataDir$graphFileName | awk '{print $5}')
+#If the graph is small, then it's not fully built.  This thing failed.
+minSize=10
+if [ $graphSize -lt $minSize ]; then
+    echo "Fail"
+    #TODO CLEAN UP on FAIL
+    #TODO EMAIL
+    exit 0
+fi
+
+############################################################
+## SUCCESS! Clean-up, Uplaod Graph, and Restart OTP
+############################################################
+# Move the new GTFS to the current GTFS folder
+rm -rf $currentGtfsDataDir*
+cp $newGtfsDataDir* $currentGtfsDataDir
+
+# Move the new OSM to the current OSM folder
+rm -rf $currentOsmDataDir*
+cp $newOsmDataDir* $currentOsmDataDir
+
+# If there is Graph currently in production, move it to Graph.obj.old
+if [ -f $otpGraphDir$graphFileName ] ; then
+  cp $otpGraphDir$graphFileName $otpGraphDir$graphFileName.old
+fi
+
+#Move the new Graph to the production location
+sudo cp $buildDataDir$graphFileName $otpGraphDir$graphFileName
+
+#TODO: Confirm that the graph moved successfully.  check that they are the same files
+#TODO: Restart OTP
+#TODO: Email Success
+
+
+
+
+
+
