@@ -97,7 +97,15 @@ do
 done < $gtfsExcelFile
 wget -i $tempFile -P $newGtfsDataDir
 
-#TODO: Check to see any of the GTFS files failed to download
+#Count the files in the directory
+gtfsCount=$(ls $newGtfsDataDir | wc -l)
+expectedGtfsCount=$(wc -l $gtfsExcelFile | awk '{print $1}')
+
+# If expected number of GTFS files is different than what was downloaded.  Error!
+if [ "$gtfsCount" -ne "$expectedGtfsCount" ] ; then
+    echo "Error downloading some GTFS"
+    exit 0
+fi
 
 #Check to see  if the new GTFS is different than the current GTFS
 diffResult=$(diff $newGtfsDataDir $currentGtfsDataDir)
