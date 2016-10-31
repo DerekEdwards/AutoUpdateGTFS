@@ -140,13 +140,12 @@ graphSize=$(ls -l $buildDataDir$graphFileName | awk '{print $5}')
 minSize=10
 if [ $graphSize -lt $minSize ]; then
     echo "Fail"
-    #TODO CLEAN UP on FAIL
     #TODO EMAIL
     exit 0
 fi
 
 ############################################################
-## SUCCESS! Clean-up, Uplaod Graph, and Restart OTP
+## SUCCESS! Clean-up, Upload Graph, and Restart OTP
 ############################################################
 # Move the new GTFS to the current GTFS folder
 rm -rf $currentGtfsDataDir*
@@ -164,7 +163,14 @@ fi
 #Move the new Graph to the production location
 sudo cp $buildDataDir$graphFileName $otpGraphDir$graphFileName
 
-#TODO: Confirm that the graph moved successfully.  check that they are the same files
+#Check to see  if the new Graph was successfully moved
+diffResult=$(diff $buildDataDir$graphFileName $otpGraphDir$graphFileName)
+if [ "$diffResult" ]; then
+  echo "The Graph.obj has not been moved into production."
+  #TODO MAIL on Failure
+  exit 0
+fi
+
 #TODO: Restart OTP
 #TODO: Email Success
 
