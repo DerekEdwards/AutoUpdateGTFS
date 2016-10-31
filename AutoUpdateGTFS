@@ -161,7 +161,7 @@ if [ -f $otpGraphDir$graphFileName ] ; then
 fi
 
 #Move the new Graph to the production location
-sudo cp $buildDataDir$graphFileName $otpGraphDir$graphFileName
+cp $buildDataDir$graphFileName $otpGraphDir$graphFileName
 
 #Check to see  if the new Graph was successfully moved
 diffResult=$(diff $buildDataDir$graphFileName $otpGraphDir$graphFileName)
