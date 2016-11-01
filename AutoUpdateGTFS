@@ -2,8 +2,6 @@
 
 #This script assumes that:
 # java has already been added to the path and that it is accessible and has sufficient permissions to run OpenTripPlanner.
-# the GTFS file put into newGtfsDataDir will always have the same name.
-# otp has been started and is watching a specific directory for new graphs to be put in
 
 ############################################################
 ## Default Setup Instructions
