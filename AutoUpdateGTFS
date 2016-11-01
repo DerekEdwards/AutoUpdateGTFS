@@ -97,21 +97,22 @@ do
 done < $gtfsExcelFile
 wget -i $tempFile -P $newGtfsDataDir
 
-#Count the files in the directory
+#Count the files in the directory to confirm all the GTFS downloaded
 gtfsCount=$(ls $newGtfsDataDir | wc -l)
 expectedGtfsCount=$(wc -l $gtfsExcelFile | awk '{print $1}')
 
 # If expected number of GTFS files is different than what was downloaded.  Error!
 if [ "$gtfsCount" -ne "$expectedGtfsCount" ] ; then
     echo "Error downloading some GTFS"
+    #TODO: Email on error
     exit 0
 fi
 
 #Check to see  if the new GTFS is different than the current GTFS
 diffResult=$(diff $newGtfsDataDir $currentGtfsDataDir)
 if [ ! "$diffResult" ]; then #this is the mac stat. Redhat might want a different format
-        echo "The GTFS has not been updated."
-        exit 0
+    echo "The GTFS has not been updated."
+    exit 0
 fi
 
 #Delete everything in the build folder
@@ -121,7 +122,7 @@ echo "Copying new gtfs to current GTFS folder"
 cp $newGtfsDataDir* $buildDataDir
 
 ############################################################
-## Download OSM Map (only run if we have new GTFS)
+## Download OSM Map (this only runs if we have new GTFS)
 ############################################################
 echo "Reading CSV of OSM locations"
 ##Go through the osmExcelFile and remove the names column.
@@ -131,8 +132,16 @@ do
 done < $osmExcelFile
 wget -i $osmTempFile -P $newOsmDataDir
 
-#TODO: Check to see if the OSM was actually downloaded
-#TODO EMAIL on Failure
+#Count the files in the directory to confirm all the OSM Maps downloaded
+osmCount=$(ls $newOsmDataDir | wc -l)
+expectedOsmCount=$(wc -l $osmExcelFile | awk '{print $1}')
+
+# If expected number of OSM files is different than what was downloaded.  Error!
+if [ "$osmCount" -ne "$expectedOsmCount" ] ; then
+    echo "Error downloading some OSM"
+    #TODO: Email on error
+    exit 0
+fi
 
 ############################################################
 ## Build the Graph
