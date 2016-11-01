@@ -47,8 +47,10 @@ otpJar=otp-1.0.0-shaded.jar
 emailDistributionList=dedwards8@gmail.com
 #System Name or Identifier. Used when emailing
 serverName="MA OTP Server"
-#TODO Everything is ok alarm
-#TODO Ask if we want emails
+#Are emails configured, and we want to send them
+sendEmail=1
+#Send emails even when nothing has changed. Even if no new GTFS has been pulled down, do you want an email letting you know that this script was run? (Everything is OK Alarm)
+verboseEmail=1
 
 ######## Stuff you probably DON'T want to change
 #This should be set to the the local directory where new GTFS data is stored
@@ -110,7 +112,9 @@ expectedGtfsCount=$(wc -l $gtfsExcelFile | awk '{print $1}')
 # If expected number of GTFS files is different than what was downloaded.  Error!
 if [ "$gtfsCount" -ne "$expectedGtfsCount" ] ; then
     echo "Error downloading some GTFS"
-    echo "Error downloading some GTFS" | mail -s "$serverName Build Error" $emailDistributionList
+    if [ "$sendEmail" -eq "1" ] ; then
+        echo "Error downloading some GTFS" | mail -s "$serverName Build Error" $emailDistributionList
+    fi
     #TODO: Make this error more specific.  Which file didn't download?
     exit 0
 fi
@@ -119,6 +123,9 @@ fi
 diffResult=$(diff $newGtfsDataDir $currentGtfsDataDir)
 if [ ! "$diffResult" ]; then #this is the mac stat. Redhat might want a different format
     echo "The GTFS has not been updated. No need to rebuild."
+    if [ "$verboseEmail" -eq "1" ] ; then
+        echo "No new GTFS to Download. No action needed at this time. Stop this email by setting verboseEmail=0" | mail -s "$serverName No New GTFS" $emailDistributionList
+    fi
     exit 0
 fi
 
@@ -146,7 +153,9 @@ expectedOsmCount=$(wc -l $osmExcelFile | awk '{print $1}')
 # If expected number of OSM files is different than what was downloaded.  Error!
 if [ "$osmCount" -ne "$expectedOsmCount" ] ; then
     echo "Error downloading some OSM"
-    echo "Error downloading some OSM" | mail -s "$serverName Build Error" $emailDistributionList
+    if [ "$sendEmail" -eq "1" ] ; then
+        echo "Error downloading some OSM" | mail -s "$serverName Build Error" $emailDistributionList
+    fi
     #TODO: Improve error message to be more helpful
     exit 0
 fi
@@ -162,7 +171,9 @@ graphSize=$(ls -l $buildDataDir$graphFileName | awk '{print $5}')
 minSize=10
 if [ $graphSize -lt $minSize ]; then
     echo "Failed Building Graph"
-    echo "Graph Building Failed" | mail -s "$serverName Build Error" $emailDistributionList
+    if [ "$sendEmail" -eq "1" ] ; then
+        echo "Graph Building Failed" | mail -s "$serverName Build Error" $emailDistributionList
+    fi
     exit 0
 fi
 
@@ -189,13 +200,17 @@ cp $buildDataDir$graphFileName $otpGraphDir$graphFileName
 diffResult=$(diff $buildDataDir$graphFileName $otpGraphDir$graphFileName)
 if [ "$diffResult" ]; then
   echo "The Graph.obj has not been moved into production."
-  echo "Graph.obj built, but Graph.obj couldn't be moved to the production location." | mail -s "$serverName Build Error" $emailDistributionList
+    if [ "$sendEmail" -eq "1" ] ; then
+      echo "Graph.obj built, but Graph.obj couldn't be moved to the production location." | mail -s "$serverName Build Error" $emailDistributionList
+    fi
   exit 0
 fi
 
-#TODO: Restart OTP Automatically
+#TODO: Have an option to Restart OTP Automatically. There will be two hew variables 1) restartAutomatically 2) commandToRestart.  If #1 is true, execture #2
 echo "Success! Restart the server to start using the new Graph.obj"
-echo "A new graph was successfully built.  You will need to restart OTP for this new graph to take effect." | mail -s "$serverName Build Success" $emailDistributionList
+if [ "$sendEmail" -eq "1" ] ; then
+  echo "A new graph was successfully built.  You will need to restart OTP for this new graph to take effect." | mail -s "$serverName Build Success" $emailDistributionList
+fi
 
 
 
