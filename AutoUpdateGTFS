@@ -41,8 +41,14 @@ osmExcelFile=/var/otp/bin/osm_locations.csv
 otpGraphDir=/var/otp/graphs/ma/
 #Specific OTP version
 otpJar=otp-1.0.0-shaded.jar
+
+######## Email Stuff
 #Email Distribution List (comma separated)
 emailDistributionList=dedwards8@gmail.com
+#System Name or Identifier. Used when emailing
+serverName="MA OTP Server"
+#TODO Everything is ok alarm
+#TODO Ask if we want emails
 
 ######## Stuff you probably DON'T want to change
 #This should be set to the the local directory where new GTFS data is stored
@@ -104,14 +110,15 @@ expectedGtfsCount=$(wc -l $gtfsExcelFile | awk '{print $1}')
 # If expected number of GTFS files is different than what was downloaded.  Error!
 if [ "$gtfsCount" -ne "$expectedGtfsCount" ] ; then
     echo "Error downloading some GTFS"
-    #TODO: Email on error
+    echo "Error downloading some GTFS" | mail -s "$serverName Build Error" $emailDistributionList
+    #TODO: Make this error more specific.  Which file didn't download?
     exit 0
 fi
 
 #Check to see  if the new GTFS is different than the current GTFS
 diffResult=$(diff $newGtfsDataDir $currentGtfsDataDir)
 if [ ! "$diffResult" ]; then #this is the mac stat. Redhat might want a different format
-    echo "The GTFS has not been updated."
+    echo "The GTFS has not been updated. No need to rebuild."
     exit 0
 fi
 
@@ -139,7 +146,8 @@ expectedOsmCount=$(wc -l $osmExcelFile | awk '{print $1}')
 # If expected number of OSM files is different than what was downloaded.  Error!
 if [ "$osmCount" -ne "$expectedOsmCount" ] ; then
     echo "Error downloading some OSM"
-    #TODO: Email on error
+    echo "Error downloading some OSM" | mail -s "$serverName Build Error" $emailDistributionList
+    #TODO: Improve error message to be more helpful
     exit 0
 fi
 
@@ -153,8 +161,8 @@ graphSize=$(ls -l $buildDataDir$graphFileName | awk '{print $5}')
 #If the graph is small, then it's not fully built.  This thing failed.
 minSize=10
 if [ $graphSize -lt $minSize ]; then
-    echo "Fail"
-    #TODO EMAIL
+    echo "Failed Building Graph"
+    echo "Graph Building Failed" | mail -s "$serverName Build Error" $emailDistributionList
     exit 0
 fi
 
@@ -181,12 +189,13 @@ cp $buildDataDir$graphFileName $otpGraphDir$graphFileName
 diffResult=$(diff $buildDataDir$graphFileName $otpGraphDir$graphFileName)
 if [ "$diffResult" ]; then
   echo "The Graph.obj has not been moved into production."
-  #TODO MAIL on Failure
+  echo "Graph.obj built, but Graph.obj couldn't be moved to the production location." | mail -s "$serverName Build Error" $emailDistributionList
   exit 0
 fi
 
 #TODO: Restart OTP Automatically
-#TODO: Email Success
+echo "Success! Restart the server to start using the new Graph.obj"
+echo "A new graph was successfully built.  You will need to restart OTP for this new graph to take effect." | mail -s "$serverName Build Success" $emailDistributionList
 
 
 
