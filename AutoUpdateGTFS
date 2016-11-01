@@ -144,13 +144,10 @@ if [ "$osmCount" -ne "$expectedOsmCount" ] ; then
 fi
 
 ############################################################
-## Build the Graph
+## Build & Test the Graph
 ############################################################
 $invokeJavaCommand $otpJarDirectory$otpJar "--build" $buildDataDir
 
-############################################################
-## Test the Graph
-############################################################
 # Get the graph size
 graphSize=$(ls -l $buildDataDir$graphFileName | awk '{print $5}')
 #If the graph is small, then it's not fully built.  This thing failed.
