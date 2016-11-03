@@ -107,7 +107,7 @@ wget -i $tempFile -P $newGtfsDataDir
 gtfsCount=$(ls $newGtfsDataDir | wc -l)
 expectedGtfsCount=$(wc -l $gtfsExcelFile | awk '{print $1}')
 
-# If expected number of GTFS files is different than what was downloaded.  Error!
+# TEST 1: If expected number of GTFS files is different than what was downloaded.  Error!
 if [ "$gtfsCount" -ne "$expectedGtfsCount" ] ; then
     echo "Error downloading some GTFS. The expected number of GTFS files differs from what was expected."
     if [ "$sendEmail" -eq "1" ] ; then
@@ -117,12 +117,11 @@ if [ "$gtfsCount" -ne "$expectedGtfsCount" ] ; then
     exit 0
 fi
 
-# If more than one file type was downloaded.  Error!
+# TEST 2: If more than one file type was downloaded.  Error!
 fileTypeCount=$(file $newGtfsDataDir* | awk '{print $2}' | sort | uniq | wc -l)
 expectedFileTypeCount=1
-echo "Downloaded the following number of file types"
+echo "Downloaded the following number of GTFS file types (should always be 1)"
 echo $fileTypeCount
-echo $expectedFileTypeCount
 if [ "$fileTypeCount" -ne "$expectedFileTypeCount" ]
 then
     echo "Error downloading some GTFS.  One of the files is not a Zip file."
@@ -132,7 +131,7 @@ then
     exit 0
 fi
 
-# If that one file time is anything other than Zip.  Error!
+# TEST 3: If that one file time is anything other than Zip.  Error!
 fileType=$(file $newGtfsDataDir* | awk '{print $2}' | uniq)
 
 echo "Downloaded the following file types"
@@ -146,7 +145,7 @@ then
     exit 0
 fi
 
-#Check to see  if the new GTFS is different than the current GTFS
+# TEST 4: Check to see  if the new GTFS is different than the current GTFS
 diffResult=$(diff $newGtfsDataDir $currentGtfsDataDir)
 if [ ! "$diffResult" ]; then #this is the mac stat. Redhat might want a different format
     echo "The GTFS has not been updated. No need to rebuild."
@@ -177,7 +176,7 @@ wget -i $osmTempFile -P $newOsmDataDir
 osmCount=$(ls $newOsmDataDir | wc -l)
 expectedOsmCount=$(wc -l $osmExcelFile | awk '{print $1}')
 
-# If expected number of OSM files is different than what was downloaded.  Error!
+# TEST 1: If expected number of OSM files is different than what was downloaded.  Error!
 if [ "$osmCount" -ne "$expectedOsmCount" ] ; then
     echo "Error downloading some OSM"
     if [ "$sendEmail" -eq "1" ] ; then
@@ -187,10 +186,37 @@ if [ "$osmCount" -ne "$expectedOsmCount" ] ; then
     exit 0
 fi
 
+# TEST 2: If more than one file type was downloaded.  Error!
+fileTypeCount=$(file $newOsmDataDir* | awk '{print $2}' | sort | uniq | wc -l)
+expectedFileTypeCount=1
+echo "Downloaded the following number of OSM file types (should always be 1)"
+echo $fileTypeCount
+if [ "$fileTypeCount" -ne "$expectedFileTypeCount" ]
+then
+    echo "Error downloading some OSM files.  One of the files is not a data file."
+    if [ "$sendEmail" -eq "1" ] ; then
+        echo "Error downloading some OSM files.  One of the files is not a data file." | mail -s "$serverName Build Error" $emailDistributionList
+    fi
+    exit 0
+fi
+
+# TEST 3: If that one file is anything other than Data.  Error!
+fileType=$(file $newOsmDataDir* | awk '{print $2}' | uniq)
+echo "Downloaded the following file types"
+echo $fileType
+if [ "$fileType" != "data" ]
+then
+    echo "Error downloading some OSM file.  The OSM is not a data file."
+     if [ "$sendEmail" -eq "1" ] ; then
+        echo "Error downloading some OSM file.  The OSM is not data file." | mail -s "$serverName Build Error" $emailDistributionList
+    fi
+    exit 0
+fi
 
 ############################################################
 ## Build & Test the Graph
 ############################################################
+echo "Building the new Graph.obj"
 $invokeJavaCommand $otpJarDirectory$otpJar "--build" $buildDataDir
 
 # Get the graph size
@@ -237,5 +263,5 @@ fi
 #TODO: Have an option to Restart OTP Automatically. There will be two hew variables 1) restartAutomatically 2) commandToRestart.  If #1 is true, execture #2
 echo "Success! Restart the server to start using the new Graph.obj"
 if [ "$sendEmail" -eq "1" ] ; then
-  echo "A new graph was successfully built.  You will need to restart OTP for this new graph to take effect." | mail -s "$serverName Build Success" $emailDistributionList
+  echo "A new graph was successfully built. If you have your server set to autoReload, then you are finished.  Otherwise, you will need to restart OTP for this new graph to take effect." | mail -s "$serverName Build Success" $emailDistributionList
 fi
