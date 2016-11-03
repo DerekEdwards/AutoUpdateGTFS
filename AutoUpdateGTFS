@@ -158,7 +158,7 @@ fi
 #Delete everything in the build folder
 rm -rf $buildDataDir*
 
-echo "Copying new gtfs to the build folder
+echo "Copying new gtfs to the build folder"
 cp $newGtfsDataDir* $buildDataDir
 
 ############################################################
