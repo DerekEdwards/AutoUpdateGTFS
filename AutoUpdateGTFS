@@ -109,11 +109,40 @@ expectedGtfsCount=$(wc -l $gtfsExcelFile | awk '{print $1}')
 
 # If expected number of GTFS files is different than what was downloaded.  Error!
 if [ "$gtfsCount" -ne "$expectedGtfsCount" ] ; then
-    echo "Error downloading some GTFS"
+    echo "Error downloading some GTFS. The expected number of GTFS files differs from what was expected."
     if [ "$sendEmail" -eq "1" ] ; then
-        echo "Error downloading some GTFS" | mail -s "$serverName Build Error" $emailDistributionList
+        echo "Error downloading some GTFS. The expected number of GTFS files differs from what was expected." | mail -s "$serverName Build Error" $emailDistributionList
     fi
     #TODO: Make this error more specific.  Which file didn't download?
+    exit 0
+fi
+
+# If more than one file type was downloaded.  Error!
+fileTypeCount=$(file $newGtfsDataDir* | awk '{print $2}' | sort | uniq | wc -l)
+expectedFileTypeCount=1
+echo "Downloaded the following number of file types"
+echo $fileTypeCount
+echo $expectedFileTypeCount
+if [ "$fileTypeCount" -ne "$expectedFileTypeCount" ]
+then
+    echo "Error downloading some GTFS.  One of the files is not a Zip file."
+    if [ "$sendEmail" -eq "1" ] ; then
+        echo "Error downloading some GTFS.  One of the files is not a Zip file." | mail -s "$serverName Build Error" $emailDistributionList
+    fi
+    exit 0
+fi
+
+# If that one file time is anything other than Zip.  Error!
+fileType=$(file $newGtfsDataDir* | awk '{print $2}' | uniq)
+
+echo "Downloaded the following file types"
+echo $fileType
+if [ "$fileType" != "Zip" ]
+then
+    echo "Error downloading some GTFS.  The GTFS is not a Zip file."
+    if [ "$sendEmail" -eq "1" ] ; then
+        echo "Error downloading some GTFS.  The GTFS is not Zip file." | mail -s "$serverName Build Error" $emailDistributionList
+    fi
     exit 0
 fi
 
@@ -157,6 +186,7 @@ if [ "$osmCount" -ne "$expectedOsmCount" ] ; then
     #TODO: Improve error message to be more helpful
     exit 0
 fi
+
 
 ############################################################
 ## Build & Test the Graph
@@ -209,9 +239,3 @@ echo "Success! Restart the server to start using the new Graph.obj"
 if [ "$sendEmail" -eq "1" ] ; then
   echo "A new graph was successfully built.  You will need to restart OTP for this new graph to take effect." | mail -s "$serverName Build Success" $emailDistributionList
 fi
-
-
-
-
-
-
