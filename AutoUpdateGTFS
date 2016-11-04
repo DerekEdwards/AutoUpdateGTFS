@@ -36,7 +36,7 @@ gtfsExcelFile=/var/otp/bin/gtfs_locations.csv
 #This should be a CSV with the followig format: NAME of the OSM, URL of OSM
 osmExcelFile=/var/otp/bin/osm_locations.csv
 #This should be set to the directory where OTP is expecting graphs to be placed
-otpGraphDir=/var/otp/graphs/ma/
+otpGraphDir=/var/otp/graphs/pa/
 #Specific OTP version
 otpJar=otp-1.0.0-shaded.jar
 
@@ -44,7 +44,7 @@ otpJar=otp-1.0.0-shaded.jar
 #Email Distribution List (comma separated)
 emailDistributionList=dedwards8@gmail.com
 #System Name or Identifier. Used when emailing
-serverName="MA OTP Server"
+serverName="SERVERNAME OTP Server"
 #Are emails configured, and we want to send them
 sendEmail=1
 #Send emails even when nothing has changed. Even if no new GTFS has been pulled down, do you want an email letting you know that this script was run? (Everything is OK Alarm)
@@ -71,7 +71,8 @@ invokeJavaCommand="java -Xmx4G -jar"
 ############################################################
 ## Pre Clean-Up
 ############################################################
-clear
+
+#clear
 echo "Starting at";  date
 echo "Cleaning Up"
 
@@ -221,6 +222,16 @@ cp $newOsmDataDir* $buildDataDir
 ############################################################
 echo "Building the new Graph.obj"
 $invokeJavaCommand $otpJarDirectory$otpJar "--build" $buildDataDir
+
+# Confirm that a graph was actually written
+if [ ! -f $buildDataDir$graphFileName ]; then
+    echo "No Graph was written"
+    if [ "$sendEmail" -eq "1" ] ; then
+        echo "Graph Building Failed. No Graph was written." | mail -s "$serverName Build Error" $emailDistributionList
+    fi
+    exit 0
+fi
+
 
 # Get the graph size
 graphSize=$(ls -l $buildDataDir$graphFileName | awk '{print $5}')
