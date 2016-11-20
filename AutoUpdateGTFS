@@ -104,6 +104,17 @@ do
 done < $gtfsExcelFile
 wget -i $tempFile -P $newGtfsDataDir
 
+# Fix any duplicate files names.                                                                                                                                                          
+# If two gtfs files have the same name e.g., "google_transit.zip", then the alternates get named google_transit.zip.1 (GTFS Builders skips these)                                   
+for file in $newGtfsDataDir*.zip.*; do
+  basepath=${file%.*}
+  extension=${file##*.}
+  newName="duplicate"
+  basename=$(basename $basepath)
+  newFile=$newGtfsDataDir$newName$extension$basename
+  mv $file $newFile
+done
+
 #Count the files in the directory to confirm all the GTFS downloaded
 gtfsCount=$(ls $newGtfsDataDir | wc -l)
 expectedGtfsCount=$(wc -l $gtfsExcelFile | awk '{print $1}')
