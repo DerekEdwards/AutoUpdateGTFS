@@ -115,6 +115,17 @@ for file in $newGtfsDataDir*.zip.*; do
   mv $file $newFile
 done
 
+# Fix any files with ashx extension (used by infopoint)
+# for instance gtfs-file.ashx will be rename ashxgtfs-file.zip
+for file in $newGtfsDataDir*.ashx; do
+  basepath=${file%.*}
+  newName="ashx"
+  basename=$(basename $basepath)
+  extension=".zip"
+  newFile=$newGtfsDataDir$newName$basename$extension
+  mv $file $newFile
+done
+
 #Count the files in the directory to confirm all the GTFS downloaded
 gtfsCount=$(ls $newGtfsDataDir | wc -l)
 expectedGtfsCount=$(wc -l $gtfsExcelFile | awk '{print $1}')
