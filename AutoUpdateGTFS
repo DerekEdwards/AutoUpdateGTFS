@@ -169,8 +169,8 @@ then
 fi
 
 # TEST 4: Check to see  if the new GTFS is different than the current GTFS
-diffResult=$(diff $newGtfsDataDir $currentGtfsDataDir)
-if [ ! "$diffResult" ]; then #this is the mac stat. Redhat might want a different format
+gtfsDiffResult=$(diff $newGtfsDataDir $currentGtfsDataDir)
+if [ ! "$gtfsDiffResult" ]; then #this is the mac stat. Redhat might want a different format
     echo "The GTFS has not been updated. No need to rebuild."
     if [ "$verboseEmail" -eq "1" ] ; then
         echo "No new GTFS to Download. No action needed at this time. Stop this email by setting verboseEmail=0" | mail -s "$serverName No New GTFS" $emailDistributionList
@@ -299,5 +299,5 @@ fi
 #TODO: Have an option to Restart OTP Automatically. There will be two hew variables 1) restartAutomatically 2) commandToRestart.  If #1 is true, execture #2
 echo "Success! Restart the server to start using the new Graph.obj"
 if [ "$sendEmail" -eq "1" ] ; then
-  echo "A new graph was successfully built. If you have your server set to autoReload, then you are finished.  Otherwise, you will need to restart OTP for this new graph to take effect." | mail -s "$serverName Build Success" $emailDistributionList
+  echo "A new graph was successfully built. If you have your server set to autoReload, then you are finished.  Otherwise, you will need to restart OTP for this new graph to take effect. What changed: "$gtfsDiffResult | mail -s "$serverName Build Success" $emailDistributionList
 fi
