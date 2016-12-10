@@ -24,33 +24,14 @@
 # 4 - Put your OSM excel file in /var/otp/bin
 # There should be two columns (Name,URL) Note: only URL is used, the name simply for reference
 
-# 5 - Update the directories in the Customizable stuff you probably want to change below
+# 5 - Update the default config.csv file and place it in /var/otp/bin
 
 ############################################################
-## The Customizable Section
+## Advanced Configs
 ############################################################
 
-######## Stuff you probably want to change
-#This should be a CSV with the following format: NAME of Service, URL of GTFS
-gtfsExcelFile=/var/otp/bin/gtfs_locations.csv
-#This should be a CSV with the followig format: NAME of the OSM, URL of OSM
-osmExcelFile=/var/otp/bin/osm_locations.csv
-#This should be set to the directory where OTP is expecting graphs to be placed
-otpGraphDir=/var/otp/graphs/pa/
-#Specific OTP version
-otpJar=otp-1.0.0-shaded.jar
-
-######## Email Stuff
-#Email Distribution List (comma separated)
-emailDistributionList=dedwards8@gmail.com
-#System Name or Identifier. Used when emailing
-serverName="SERVERNAME OTP Server"
-#Are emails configured, and we want to send them
-sendEmail=1
-#Send emails even when nothing has changed. Even if no new GTFS has been pulled down, do you want an email letting you know that this script was run? (Everything is OK Alarm)
-verboseEmail=1
-
-######## Stuff you probably DON'T want to change
+#Config File: Sets basic configurations (e.g., GTFS Excel file name, OSM Excel file name, OTP Graph Directory, OtpJar Name, Email Address etc.
+configFile=/var/otp/bin/config.csv
 #This should be set to the the local directory where new GTFS data is stored
 newGtfsDataDir=/var/otp/gtfs_new/
 #This should be set to the local directory where the Currently used GTFS data is stored
@@ -68,12 +49,53 @@ otpJarDirectory=/var/otp/bin/
 #This should be the parameters used when invoking the OpenTripPlanner test new GTFS data
 invokeJavaCommand="java -Xmx4G -jar"
 
+###########################################################
+## Read in Configs
+##########################################################
+echo "Starting at";  date
+echo "Reading Configs of GTFS locations"
+idx=0
+while IFS="," read key value
+do
+  idx=$((idx+1))
+  if [ "$idx" -eq "1" ] ; then
+    gtfsExcelFile=$value
+    echo "GTFS Excel File: "$value
+  fi
+  if [ "$idx" -eq "2" ] ; then 
+    osmExcelFile=$value
+    echo "OSM Excel File: "$value
+  fi
+  if [ "$idx" -eq "3" ] ; then 
+    otpGraphDire=$value
+    echo "OTP Graph Dir: "$value
+  fi
+  if [ "$idx" -eq "4" ] ; then 
+    otpJar=$value
+    echo "OTP Jar File: "$value
+  fi
+  if [ "$idx" -eq "5" ] ; then 
+    emailDistributionList=$value
+    echo "Email Distribution List: "$value
+  fi
+  if [ "$idx" -eq "6" ] ; then 
+    serverName=$value
+    echo "Server Name: "$value
+  fi
+  if [ "$idx" -eq "7" ] ; then 
+    sendEmail=$value
+    echo "Send Emails on Success or Failure: : "$value
+  fi
+  if [ "$idx" -eq "8" ] ; then 
+    verboseEmail=$value
+    echo "Send Email Every Time AutoUpdateGTFS Runs: : "$value
+  fi
+done < $configFile
+
 ############################################################
 ## Pre Clean-Up
 ############################################################
 
-#clear
-echo "Starting at";  date
 echo "Cleaning Up"
 
 #Delete everything in the New GTFS Folder
@@ -104,8 +126,8 @@ do
 done < $gtfsExcelFile
 wget -i $tempFile -P $newGtfsDataDir
 
-# Fix any duplicate files names.                                                                                                                                                          
-# If two gtfs files have the same name e.g., "google_transit.zip", then the alternates get named google_transit.zip.1 (GTFS Builders skips these)                                   
+# Fix any duplicate files names.                                                                                                                                             
+# If two gtfs files have the same name e.g., "google_transit.zip", then the alternates get named google_transit.zip.1 (GTFS Builders skips these)                             
 for file in $newGtfsDataDir*.zip.*; do
   basepath=${file%.*}
   extension=${file##*.}
