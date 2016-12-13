@@ -2,7 +2,7 @@ gtfsExcelFile,/var/otp/bin/gtfs_locations.csv
 osmExcelFile,/var/otp/bin/osm_locations.csv
 otpGraphDir,/var/otp/graphs/pa/
 otpJar,otp-1.0.0-shaded.jar
-emailDistributionList,dedwards8@gmail.com
+emailDistributionList,fake@gmail.com
 serverName,TEMP OTP Server
 sendEmail,1
 verboseEmail,1
