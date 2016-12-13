@@ -84,11 +84,11 @@ do
   fi
   if [ "$idx" -eq "7" ] ; then 
     sendEmail=$value
-    echo "Send Emails on Success or Failure: : "$value
+    echo "Send Emails on Success or Failure: "$value
   fi
   if [ "$idx" -eq "8" ] ; then 
     verboseEmail=$value
-    echo "Send Email Every Time AutoUpdateGTFS Runs: : "$value
+    echo "Send Email Every Time AutoUpdateGTFS Runs: "$value
   fi
 done < $configFile
 
