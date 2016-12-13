@@ -29,6 +29,9 @@
 ############################################################
 ## Advanced Configs
 ############################################################
+##### Update this Version on Each Release ######
+version=1.0
+echo "Running version: "$version
 
 #Config File: Sets basic configurations (e.g., GTFS Excel file name, OSM Excel file name, OTP Graph Directory, OtpJar Name, Email Address etc.
 configFile=/var/otp/bin/config.csv
