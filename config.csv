@@ -1,8 +1,8 @@
-gtfsExcelFile,~/auto-update-gtfs/bin/gtfs_locations.csv
-osmExcelFile,~/audo-update-gtfs/bin//osm_locations.csv
-otpGraphDir,/var/otp/graphs/pa/
+igtfsExcelFile,/var/otp/auto-update-gtfs/bin/gtfs_locations.csv
+osmExcelFile,/var/otp/auto-update-gtfs/bin/osm_locations.csv
+otpGraphDir,/var/otp/graphs/fl/
 otpJar,otp-1.0.0-shaded.jar
-emailDistributionList,fake@gmail.com
-serverName,TEMP OTP Server
+emailDistributionList,dedwards8@gmail.com
+serverName,LYNX OTP Server
 sendEmail,1
 verboseEmail,1

@@ -8,23 +8,23 @@
 ############################################################
 
 # 1 - Create the following directories and make sure that permissions allow for writing
-# ~/auto-update-gtfs/bin
-# ~/auto-update-gtfs/data
+# /var/otp/auto-update-gtfs/bin
+# /var/otp/auto-update-gtfs/data
 # /var/otp/graphs/<your graph folder name>
-# ~/auto-update-gtfs/gtfs_current
-# ~/auto-update-gtfs/var/otp/gtfs_new
-# ~/auto-update-gtfs/var/otp/osm_current
-# ~/auto-update-gtfs/var/otp/osm_new
+# /var/otp/auto-update-gtfs/gtfs_current
+# /var/otp/auto-update-gtfs/var/otp/gtfs_new
+# /var/otp/auto-update-gtfs/var/otp/osm_current
+# /var/otp/auto-update-gtfs/var/otp/osm_new
 
-# 2 - Put your Jar File in ~/auto-update-gtfs/bin
+# 2 - Put your Jar File in /var/otp/auto-update-gtfs/bin
 
-# 3 - Put your gtfs excel file in ~/auto-update-gtfs/bin
+# 3 - Put your gtfs excel file in /var/otp/auto-update-gtfs/bin
 # There should be two columns (Name,URL) Note: only URL is used, the name simply for reference
 
-# 4 - Put your OSM excel file in ~/auto-update-gtfs/bin
+# 4 - Put your OSM excel file in /var/otp/auto-update-gtfs/bin
 # There should be two columns (Name,URL) Note: only URL is used, the name simply for reference
 
-# 5 - Update the default config.csv file and place it in ~/auto-update-gtfs/bin
+# 5 - Update the default config.csv file and place it in /var/otp/auto-update-gtfs/bin
 
 ############################################################
 ## Advanced Configs
@@ -34,21 +34,21 @@ version=1.1
 echo "Running version: "$version
 
 #Config File: Sets basic configurations (e.g., GTFS Excel file name, OSM Excel file name, OTP Graph Directory, OtpJar Name, Email Address etc.
-configFile=~/auto-update-gtfs/config.csv
+configFile=/var/otp/auto-update-gtfs/config.csv
 #This should be set to the the local directory where new GTFS data is stored
-newGtfsDataDir=~/auto-update-gtfs/gtfs_new/
+newGtfsDataDir=/var/otp/auto-update-gtfs/gtfs_new/
 #This should be set to the local directory where the Currently used GTFS data is stored
-currentGtfsDataDir=~/auto-update-gtfs/gtfs_current/
+currentGtfsDataDir=/var/otp/auto-update-gtfs/gtfs_current/
 #New Osm Directory
-newOsmDataDir=~/auto-update-gtfs/osm_new/
+newOsmDataDir=/var/otp/auto-update-gtfs/osm_new/
 #Current Osm Directory
-currentOsmDataDir=~/auto-update-gtfs/osm_current/
+currentOsmDataDir=/var/otp/auto-update-gtfs/osm_current/
 #This is the folder that combines the GTFS and OSM.  The graph is built from this folder
-buildDataDir=~/auto-update-gtfs/data/
+buildDataDir=/var/otp/auto-update-gtfs/data/
 #This should be the filename of the graph object. This is always Graph.obj when OTP builds it.
 graphFileName=Graph.obj
 #This should be the directory of the OpenTripPlanner jar that is serving the instance of OTP on this server
-otpJarDirectory=~/auto-update-gtfs/bin/
+otpJarDirectory=/var/otp/auto-update-gtfs/bin/
 #This should be the parameters used when invoking the OpenTripPlanner test new GTFS data
 invokeJavaCommand="java -Xmx8G -jar"
 
