@@ -125,31 +125,12 @@ fi
 echo "Reading CSV of GTFS locations"
 while IFS="," read Name URL
 do
-  echo $URL >> $tempFile
+  echo $Name
+  echo $URL
+  echo $newGtfsDataDir$name.zip
+  echo -----------------
+  wget $URL -O $newGtfsDataDir$Name.zip
 done < $gtfsExcelFile
-wget -i $tempFile -P $newGtfsDataDir
-
-# Fix any duplicate files names.                                                                                                                                             
-# If two gtfs files have the same name e.g., "google_transit.zip", then the alternates get named google_transit.zip.1 (GTFS Builders skips these)                             
-for file in $newGtfsDataDir*.zip.*; do
-  basepath=${file%.*}
-  extension=${file##*.}
-  newName="duplicate"
-  basename=$(basename $basepath)
-  newFile=$newGtfsDataDir$newName$extension$basename
-  mv $file $newFile
-done
-
-# Fix any files with ashx extension (used by infopoint)
-# for instance gtfs-file.ashx will be rename ashxgtfs-file.zip
-for file in $newGtfsDataDir*.ashx; do
-  basepath=${file%.*}
-  newName="ashx"
-  basename=$(basename $basepath)
-  extension=".zip"
-  newFile=$newGtfsDataDir$newName$basename$extension
-  mv $file $newFile
-done
 
 #Count the files in the directory to confirm all the GTFS downloaded
 gtfsCount=$(ls $newGtfsDataDir | wc -l)
