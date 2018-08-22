@@ -30,7 +30,7 @@
 ## Advanced Configs
 ############################################################
 ##### Update this Version on Each Release ######
-version=1.1
+version=1.2
 echo "Running version: "$version
 
 #Config File: Sets basic configurations (e.g., GTFS Excel file name, OSM Excel file name, OTP Graph Directory, OtpJar Name, Email Address etc.
@@ -51,6 +51,8 @@ graphFileName=Graph.obj
 otpJarDirectory=/var/otp/auto-update-gtfs/bin/
 #This should be the parameters used when invoking the OpenTripPlanner test new GTFS data
 invokeJavaCommand="java -Xmx8G -jar"
+#Location of the Transformation Library
+extensionJar=/var/otp/auto-update-gtfs/bin/onebusaway-gtfs-transformer-cli-1.3.43.jar
 
 ###########################################################
 ## Read in Configs
@@ -191,6 +193,19 @@ echo "Copying new gtfs to the build folder"
 cp $newGtfsDataDir* $buildDataDir
 
 ############################################################
+## Extend the Expiration of all GTFS Files
+############################################################
+
+FILES=$buildDataDir'*.zip'
+for f in $FILES
+do
+  echo "Extending the dates of "$f
+  java -jar $extensionJar --transform='{"op":"calendar_extension", "end_date":"20201231"}' $f $buildDataDir'EXTENDED'$(basename $f)
+  echo "Deleting"$f
+  rm $f
+done
+
+############################################################
 ## Download OSM Map (this only runs if we have new GTFS)
 ############################################################
 echo "Reading CSV of OSM locations"
@@ -225,19 +240,6 @@ then
     echo "Error downloading some OSM files.  One of the files is not a data file."
     if [ "$sendEmail" -eq "1" ] ; then
         echo "Error downloading some OSM files.  One of the files is not a data file." | mail -s "$serverName Build Error" $emailDistributionList
-    fi
-    exit 0
-fi
-
-# TEST 3: If that one file is anything other than Data.  Error!
-fileType=$(file $newOsmDataDir* | awk '{print $2}' | uniq)
-echo "Downloaded the following file types"
-echo $fileType
-if [ "$fileType" != "data" ]
-then
-    echo "Error downloading some OSM file.  The OSM is not a data file."
-     if [ "$sendEmail" -eq "1" ] ; then
-        echo "Error downloading some OSM file.  The OSM is not data file." | mail -s "$serverName Build Error" $emailDistributionList
     fi
     exit 0
 fi
