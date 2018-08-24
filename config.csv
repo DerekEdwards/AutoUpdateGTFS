@@ -1,7 +1,7 @@
 igtfsExcelFile,/var/otp/auto-update-gtfs/bin/gtfs_locations.csv
 osmExcelFile,/var/otp/auto-update-gtfs/bin/osm_locations.csv
 otpGraphDir,/var/otp/graphs/fl/
-otpJar,otp-1.0.0-shaded.jar
+otpJar,otp-1.3.0.26-shaded.jar
 emailDistributionList,dedwards8@gmail.com
 serverName,LYNX OTP Server
 sendEmail,1
