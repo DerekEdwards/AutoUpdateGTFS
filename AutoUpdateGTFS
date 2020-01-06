@@ -72,7 +72,7 @@ do
     echo "OSM Excel File: "$value
   fi
   if [ "$idx" -eq "3" ] ; then 
-    otpGraphDire=$value
+    otpGraphDir=$value
     echo "OTP Graph Dir: "$value
   fi
   if [ "$idx" -eq "4" ] ; then 
